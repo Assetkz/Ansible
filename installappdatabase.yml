@@ -1,0 +1,102 @@
+---
+- name: Install APP Server
+  hosts: app
+  become: yes
+  vars:
+    ansible_become_password: "123123"
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
+    - name: Install required packages
+      apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - software-properties-common
+        state: present
+
+    - name: Add Docker GPG key
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Add Docker repository
+      apt_repository:
+        repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable
+        state: present
+        update_cache: yes
+
+    - name: Install Docker
+      apt:
+        name: docker-ce
+        state: present
+
+    - name: Start and enable Docker service
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+- name: Install database Server
+  hosts: database
+  become: yes
+  vars:
+    ansible_become_password: "123123"
+  tasks:
+    - name: Add PostgreSQL repository key
+      apt_key:
+        url: https://www.postgresql.org/media/keys/ACCC4CF8.asc
+        state: present
+
+    - name: Add PostgreSQL repository
+      apt_repository:
+        repo: "deb http://apt.postgresql.org/pub/repos/apt/ {{ ansible_distribution_release }}-pgdg main"
+        state: present
+        update_cache: yes
+
+    - name: Install PostgreSQL server
+      apt:
+        name: "postgresql-{{ postgres_version }}"
+        state: present
+        update_cache: yes
+
+    - name: Create PostgreSQL data directory
+      file:
+        path: "{{ postgres_data_directory }}"
+        state: directory
+        owner: postgres
+        group: postgres
+        mode: '0755' 
+
+    - name: Initialize PostgreSQL database
+      command: "/usr/pgsql-{{ postgres_version }}/bin/postgresql-{{ postgres_version }}-setup initdb"
+      args:
+        creates: "{{ postgres_data_directory }}/PG_VERSION"
+      become_user: postgres  
+
+    - name: Start and enable PostgreSQL service
+      service:
+        name: postgresql
+        state: started
+        enabled: yes
+
+- name: Configure Web Server
+  hosts: web
+  become: yes
+  vars:
+    ansible_become_password: "123123"
+  tasks:
+    - name: Install Nginx
+      apt:
+        name: nginx
+        state: present
+        update_cache: yes
+
+    - name: Start and enable Nginx
+      service:
+        name: nginx
+        state: started
+        enabled: yes
