@@ -1,0 +1,12 @@
+[app]
+10.130.0.8  ansible_user=ansible ansible_ssh_private_key_file=/etc/ansible/ssh/ansible
+10.130.0.10  ansible_user=ansible ansible_ssh_private_key_file=/etc/ansible/ssh/ansible
+
+[database]
+10.130.0.20  ansible_user=ansible ansible_ssh_private_key_file=/etc/ansible/ssh/ansible
+[database:vars]
+postgres_version = 16
+postgres_data_directory = /var/lib/postgresql/16/main
+
+[web]
+10.130.0.20  ansible_user=ansible ansible_ssh_private_key_file=/etc/ansible/ssh/ansible
